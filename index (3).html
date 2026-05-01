@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MICROUNIVERSO · Ignacio & Chicha</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a23;
+    --bg-deep: #000010;
+    --grid: #1a1a3e;
+    --cyan: #5cf2ff;
+    --magenta: #ff5cd4;
+    --yellow: #ffd23f;
+    --green: #5cff7a;
+    --orange: #ff8c42;
+    --red: #ff3860;
+    --white: #fffef5;
+    --dim: #6a6a9e;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(92, 242, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 92, 212, 0.05) 0%, transparent 50%),
+      var(--bg-deep);
+    background-attachment: fixed;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .crt {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+    opacity: 0.4;
+  }
+
+  .game {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .splash { text-align: center; padding: 40px 20px; animation: fadeIn 0.6s ease-out; }
+  .splash-title { color: var(--yellow); font-size: 18px; margin-bottom: 8px; text-shadow: 3px 3px 0 var(--magenta); letter-spacing: 2px; animation: titlePulse 2s ease-in-out infinite; }
+  .splash-sub { color: var(--cyan); font-size: 9px; margin-bottom: 28px; line-height: 1.8; }
+  .splash-credit { color: var(--magenta); font-size: 8px; margin-bottom: 32px; line-height: 2; }
+  .splash-blink { color: var(--green); font-size: 9px; animation: blink 1s step-start infinite; margin-top: 12px; }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes titlePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hud { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; padding: 10px; background: var(--bg); border: 2px solid var(--cyan); align-items: center; }
+  .hud-player { display: flex; align-items: center; gap: 8px; font-size: 8px; }
+  .hud-player.right { justify-content: flex-end; }
+  .hud-player .avatar { width: 24px; height: 24px; image-rendering: pixelated; }
+  .hud-player .name { color: var(--yellow); }
+  .hud-player.chicha .name { color: var(--magenta); }
+  .hud-pos { color: var(--white); font-size: 7px; }
+  .hud-vs { color: var(--cyan); font-size: 10px; }
+
+  .board-wrapper { background: var(--bg); border: 2px solid var(--magenta); padding: 8px; position: relative; }
+  .board { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); gap: 3px; width: 100%; }
+
+  .cell {
+    background: var(--grid);
+    border: 1px solid #2a2a5e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    font-size: 5.5px;
+    text-align: center;
+    padding: 2px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    overflow: hidden;
+    min-height: 70px;
+  }
+
+  .cell:hover { background: #2a2a5e; }
+  .cell.start { background: #1a4a3e; border-color: var(--green); }
+  .cell.end { background: #4a1a3e; border-color: var(--magenta); }
+  .cell.special { background: #2a1a4e; border-color: var(--cyan); }
+  .cell.danger { background: #4a1a1a; border-color: var(--red); }
+  .cell.bonus { background: #4a3a1a; border-color: var(--yellow); }
+
+  .cell-num { position: absolute; top: 2px; left: 2px; font-size: 5px; color: var(--dim); }
+  .cell-icon { font-size: 14px; margin-bottom: 1px; line-height: 1; }
+  .cell-text { font-size: 4.5px; color: var(--white); line-height: 1.3; word-break: break-word; hyphens: auto; }
+
+  .cell.start .cell-text { color: var(--green); }
+  .cell.end .cell-text { color: var(--magenta); }
+  .cell.special .cell-text { color: var(--cyan); }
+  .cell.danger .cell-text { color: var(--red); }
+  .cell.bonus .cell-text { color: var(--yellow); }
+  .cell.current { animation: cellPulse 0.6s ease-in-out infinite alternate; z-index: 5; }
+
+  @keyframes cellPulse {
+    from { box-shadow: inset 0 0 0 2px var(--white); }
+    to { box-shadow: inset 0 0 0 2px var(--yellow); }
+  }
+
+  .token { position: absolute; width: 60%; height: 60%; image-rendering: pixelated; z-index: 10; pointer-events: none; }
+  .token.ignacio { bottom: 2px; left: 2px; }
+  .token.chicha { top: 2px; right: 2px; }
+
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .btn {
+    background: var(--bg);
+    color: var(--cyan);
+    border: 2px solid var(--cyan);
+    font-family: inherit;
+    font-size: 9px;
+    padding: 14px 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.1s;
+    image-rendering: pixelated;
+  }
+
+  .btn:hover:not(:disabled) { background: var(--cyan); color: var(--bg-deep); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn.primary { color: var(--yellow); border-color: var(--yellow); }
+  .btn.primary:hover:not(:disabled) { background: var(--yellow); color: var(--bg-deep); }
+  .btn.danger { color: var(--magenta); border-color: var(--magenta); }
+  .btn.danger:hover:not(:disabled) { background: var(--magenta); color: var(--bg-deep); }
+  .btn-full { grid-column: 1 / -1; }
+
+  .dice-area { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px; background: var(--bg); border: 2px solid var(--green); }
+  .dice { width: 40px; height: 40px; background: var(--white); color: var(--bg-deep); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 3px solid var(--green); image-rendering: pixelated; }
+  .dice.rolling { animation: rollDice 0.6s linear; }
+
+  @keyframes rollDice {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(180deg) scale(1.2); }
+    50% { transform: rotate(360deg) scale(1); }
+    75% { transform: rotate(540deg) scale(1.2); }
+    100% { transform: rotate(720deg) scale(1); }
+  }
+
+  .dice-info { font-size: 8px; color: var(--green); text-align: center; }
+
+  .message { background: var(--bg); border: 2px solid var(--yellow); padding: 12px; min-height: 60px; font-size: 8px; line-height: 1.7; color: var(--yellow); }
+  .message .turn { color: var(--cyan); font-size: 7px; margin-bottom: 6px; }
+  .message .body { color: var(--white); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 16, 0.92); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; animation: fadeIn 0.2s; }
+  .modal { background: var(--bg); border: 3px solid var(--cyan); padding: 20px; max-width: 400px; width: 100%; box-shadow: 0 0 0 1px var(--bg-deep), 0 0 0 4px var(--magenta); max-height: 90vh; overflow-y: auto; }
+  .modal-title { color: var(--yellow); font-size: 11px; margin-bottom: 14px; text-align: center; }
+  .modal-text { font-size: 9px; line-height: 1.8; color: var(--white); margin-bottom: 16px; }
+  .modal input[type="text"], .modal textarea { width: 100%; background: var(--bg-deep); border: 2px solid var(--cyan); color: var(--white); font-family: inherit; font-size: 9px; padding: 8px; margin-bottom: 8px; line-height: 1.6; }
+  .modal textarea { resize: vertical; min-height: 60px; font-size: 8px; }
+  .modal input:focus, .modal textarea:focus { outline: none; border-color: var(--yellow); }
+  .modal-label { font-size: 7px; color: var(--cyan); margin-bottom: 6px; margin-top: 4px; }
+  .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+
+  .win { text-align: center; padding: 30px 20px; animation: fadeIn 0.6s; }
+  .win-title { color: var(--yellow); font-size: 16px; margin-bottom: 16px; text-shadow: 3px 3px 0 var(--magenta); animation: titlePulse 1s ease-in-out infinite; }
+  .win-couple { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 24px 0; }
+  .win-couple .dancer { width: 64px; height: 64px; image-rendering: pixelated; animation: dance 0.4s steps(2) infinite alternate; }
+  .win-couple .dancer:nth-child(2) { animation-delay: 0.2s; }
+
+  @keyframes dance {
+    0% { transform: translateY(0) rotate(-3deg); }
+    100% { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  .heart { color: var(--red); font-size: 24px; animation: heartBeat 0.6s ease-in-out infinite; }
+
+  @keyframes heartBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+  }
+
+  .win-text { color: var(--cyan); font-size: 9px; line-height: 2; margin: 16px 0; }
+  .win-quote { color: var(--magenta); font-size: 8px; margin-top: 20px; line-height: 2; }
+  .win-cev { color: var(--yellow); font-size: 8px; margin-top: 16px; }
+
+  .rules-list { background: var(--bg); border: 2px solid var(--orange); padding: 10px; font-size: 7px; line-height: 1.8; color: var(--white); max-height: 200px; overflow-y: auto; }
+  .rules-list h3 { color: var(--orange); font-size: 8px; margin-bottom: 8px; }
+  .rules-list .rule-item { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed var(--grid); }
+  .rules-list .rule-item:last-child { border: 0; }
+  .rule-num { color: var(--cyan); }
+  .rule-edited { color: var(--magenta); font-size: 6px; }
+
+  .footer-credit { text-align: center; color: var(--dim); font-size: 6px; padding: 12px 0 4px; line-height: 2; }
+  .footer-credit .heart-mini { color: var(--red); }
+
+  .sparkle { position: absolute; pointer-events: none; color: var(--yellow); font-size: 16px; animation: sparkle 0.8s ease-out forwards; }
+
+  @keyframes sparkle {
+    0% { opacity: 1; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+    100% { opacity: 0; transform: scale(0.5) rotate(360deg) translateY(-30px); }
+  }
+
+  @media (max-width: 380px) {
+    body { padding: 8px; }
+    .hud-player { font-size: 7px; }
+    .splash-title { font-size: 14px; }
+    .cell-text { font-size: 4px; }
+    .cell-icon { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crt"></div>
+<div class="game" id="game"></div>
+<div id="modal-root"></div>
+
+<script>
+// ============================================================
+// MICROUNIVERSO - Un regalo para Ignacio y Chicha
+// Hecho con carino por CEV - v1.1
+// ============================================================
+
+// ---------- SPRITES ----------
+
+function spriteIgnacio(size) {
+  size = size || 32;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">' +
+    '<rect width="16" height="16" fill="transparent"/>' +
+    '<rect x="4" y="1" width="8" height="1" fill="#3d2817"/>' +
+    '<rect x="3" y="2" width="10" height="2" fill="#5c3a22"/>' +
+    '<rect x="4" y="4" width="8" height="5" fill="#f4c896"/>' +
+    '<rect x="3" y="5" width="1" height="3" fill="#5c3a22"/>' +
+    '<rect x="12" y="5" width="1" height="3" fill="#5c3a22"/>' +
+    '<rect x="5" y="6" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="10" y="6" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="4" y="8" width="8" height="2" fill="#3d2817"/>' +
+    '<rect x="5" y="8" width="6" height="1" fill="#f4c896"/>' +
+    '<rect x="6" y="9" width="4" height="1" fill="#a04030"/>' +
+    '<rect x="3" y="10" width="10" height="4" fill="#ffd23f"/>' +
+    '<rect x="2" y="11" width="1" height="3" fill="#f4c896"/>' +
+    '<rect x="13" y="11" width="1" height="3" fill="#f4c896"/>' +
+    '<rect x="4" y="14" width="3" height="2" fill="#2a4a8e"/>' +
+    '<rect x="9" y="14" width="3" height="2" fill="#2a4a8e"/>' +
+    '</svg>';
+}
+
+function spriteChicha(size) {
+  size = size || 32;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">' +
+    '<rect width="16" height="16" fill="transparent"/>' +
+    '<rect x="2" y="2" width="12" height="2" fill="#1a0d08"/>' +
+    '<rect x="2" y="4" width="2" height="9" fill="#1a0d08"/>' +
+    '<rect x="12" y="4" width="2" height="9" fill="#1a0d08"/>' +
+    '<rect x="4" y="3" width="8" height="6" fill="#e8b888"/>' +
+    '<rect x="4" y="3" width="8" height="1" fill="#1a0d08"/>' +
+    '<rect x="5" y="5" width="2" height="2" fill="#fff"/>' +
+    '<rect x="9" y="5" width="2" height="2" fill="#fff"/>' +
+    '<rect x="6" y="5" width="1" height="1" fill="#3d2817"/>' +
+    '<rect x="10" y="5" width="1" height="1" fill="#3d2817"/>' +
+    '<rect x="6" y="8" width="4" height="1" fill="#a04030"/>' +
+    '<rect x="5" y="7" width="1" height="1" fill="#e8b888"/>' +
+    '<rect x="10" y="7" width="1" height="1" fill="#e8b888"/>' +
+    '<rect x="3" y="9" width="10" height="5" fill="#ff5cd4"/>' +
+    '<rect x="2" y="10" width="1" height="3" fill="#e8b888"/>' +
+    '<rect x="13" y="10" width="1" height="3" fill="#e8b888"/>' +
+    '<rect x="4" y="9" width="1" height="3" fill="#1a0d08"/>' +
+    '<rect x="11" y="9" width="1" height="3" fill="#1a0d08"/>' +
+    '<rect x="4" y="14" width="3" height="2" fill="#e8b888"/>' +
+    '<rect x="9" y="14" width="3" height="2" fill="#e8b888"/>' +
+    '</svg>';
+}
+
+// ---------- BOARD DESIGN ----------
+const TOTAL_CELLS = 24;
+
+function buildPath() {
+  const path = [];
+  for (let row = 0; row < 4; row++) {
+    if (row % 2 === 0) {
+      for (let col = 0; col < 6; col++) path.push({ row: row, col: col });
+    } else {
+      for (let col = 5; col >= 0; col--) path.push({ row: row, col: col });
+    }
+  }
+  return path;
+}
+const PATH = buildPath();
+
+// ---------- DEFAULT RULES ----------
+// PARA EDITAR LAS CASILLAS, MODIFICA ESTE ARRAY.
+// Cada casilla tiene: type, icon, title, text, desc, effect (opcional)
+// type: 'start', 'end', 'normal', 'special', 'danger', 'bonus'
+// effect: 'forward1', 'forward2', 'back2', 'skipturn', 'rollagain', 'createrule'
+
+const DEFAULT_RULES = [
+  { type: 'start', icon: '★', title: 'La Boda de Sarkis', text: 'La Boda de Sarkis', desc: '"Este juego debería comenzarse bailando.' },
+  { type: 'normal', icon: '♪', title: 'La UCAB'', text: 'La UCAB', desc: 'Cuenta el mejor cuento que viviste con él/ella en la católica.' },
+  { type: 'bonus', icon: '◆', title: 'Buena vibra', text: 'Buena vibra', desc: 'Avanzas una casilla por buena vibra', effect: 'forward1' },
+  { type: 'special', icon: '♥', title: 'Amigos Invisibles', text: 'Amigos Invisibles', desc: 'Hay que poner una canción de ellos. Ya.' },
+  { type: 'danger', icon: '!', title: 'Boca de Uchire', text: 'Boca de Uchire', desc: '"Quien cae aquí lava los platos la próxima vez y pierde el turno.', effect: 'skipturn' },
+  { type: 'normal', icon: '♫', title: 'Karaoke', text: 'Karaoke', desc: 'Quien cae aquí tiene que cantar peaches a todo pulmón.' },
+    { type: 'bonus', icon: '◆', title: 'Corozal', text: 'Corozal', desc: 'Si no tienen plan a Corozal, hay que armarlo. Ya. Tira de nuevo después de armarlo.', effect: 'rollagain' },
+  { type: 'special', icon: '★', title: 'Carlos Eduardo', text: 'Carlos Eduardo', desc: 'Un bonus porque Carlos te quiere mucho. Avanza 1.', effect: 'forward1' },
+  { type: 'normal', icon: '♣', title: 'Sunset Roll', text: 'Sunset Roll', desc: 'ESTÁS SUDADO. PIERDES UN TURNO', effect: 'skipturn' },
+  { type: 'danger', icon: '!', title: 'Mala vibra', text: 'Mala vibra', desc: 'Todo está forzado. Retrocedes 2.', effect: 'back2' },
+  { type: 'normal', icon: '♥', title: '"Ella y yo"', text: 'Ella y yo', desc: 'Hora de cantar. Tu eres Aventura. La otra persona es Don Omar.' },
+  { type: 'bonus', icon: '◆', title: 'Margarita', text: 'Margarita', desc: 'Te fuiste a Margarita. Avanzas 1.', effect: 'forward1' },
+  { type: 'special', icon: '♦', title: 'Microuniverso', text: 'Microuniverso', desc: 'Aqui aplican todas reglas. Inventa la tuya.', effect: 'createrule' },
+  { type: 'normal', icon: '♪', title: 'Caramelos de Cianuro', text: 'Caramelos de Cianuro', desc: 'Hay que poner una canciǿn de ellos. Ya.' },
+  { type: 'bonus', icon: '◆', title: 'Buena vibra', text: 'Buena vibra', desc: 'Por buena vibra, tira de nuevo.', effect: 'rollagain' },
+  { type: 'normal', icon: '♥', title: '2017', text: '2017', desc: 'Esquivaste bombas lacrimógenas, eres un crack.' },
+  { type: 'danger', icon: '!', title: 'Juego de mesa', text: 'Juego de mesa', desc: 'Inventaste demasiado. Pierdes un turno.', effect: 'skipturn' },
+  { type: 'special', icon: '★', title: 'Arepitas', text: 'Arepitas', desc: 'Te toca hacer las arepas la próxima vez. En budare preferiblemente.' },
+  { type: 'normal', icon: '♫', title: 'Nacho', text: 'Nacho', desc: 'Hora de escribirle a Ignacio Velasco a ver cómo está.' },
+  { type: 'bonus', icon: '◆', title: 'Beso', text: 'Beso', desc: 'Un beso, con lengua. Avanzas 2.', effect: 'forward2' },
+  { type: 'normal', icon: '♪', title: 'La boda', text: 'La boda', desc: 'Toca recordar la mejor anécdota de la boda.' },
+  { type: 'special', icon: '♥', title: 'Compañeros', text: 'Compañeros', desc: 'Una agarradita de manos. Que viva el amor.' },
+  { type: 'bonus', icon: '◆', title: 'Un apartamento nuevo', text: 'Un apartamento nuevo', desc: '¡Que vivan los novios! Avanza al final.', effect: 'forward1' },
+  { type: 'end', icon: '♥', title: 'Para siempre', text: 'Para siempre', desc: 'Ignacio Andrade & Isabella Ravelo.' },
+];
+
+// ---------- GAME STATE ----------
+const STORAGE_KEY = 'microuniverso_v2';
+
+function defaultState() {
+  return {
+    phase: 'splash',
+    rules: DEFAULT_RULES.map(function(r) { return Object.assign({}, r, { edited: false }); }),
+    players: [
+      { name: 'IGNACIO', pos: 0, color: 'yellow', skipNext: false, sprite: 'ignacio' },
+      { name: 'CHICHA', pos: 0, color: 'magenta', skipNext: false, sprite: 'chicha' },
+    ],
+    turn: 0,
+    lastDice: null,
+    message: { turn: '', body: '' },
+    rollAgain: false,
+    showRules: false,
+    editingIdx: null,
+  };
+}
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    if (!parsed.rules || parsed.rules.length !== TOTAL_CELLS) return defaultState();
+    parsed.editingIdx = null;
+    parsed.showRules = parsed.showRules || false;
+    return parsed;
+  } catch (e) {
+    return defaultState();
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) { }
+}
+
+// ---------- ACTIONS ----------
+function setMessage(turn, body) {
+  state.message = { turn: turn, body: body };
+}
+
+function startGame() {
+  state.phase = 'playing';
+  setMessage('TURNO DE IGNACIO', 'El juego comienza. Tira el dado.');
+  saveState();
+  render();
+}
+
+function rollDice() {
+  if (state.phase !== 'playing') return;
+
+  const player = state.players[state.turn];
+
+  if (player.skipNext) {
+    player.skipNext = false;
+    setMessage(player.name + ' pierde el turno', 'Le toca al otro.');
+    state.turn = 1 - state.turn;
+    saveState();
+    render();
+    return;
+  }
+
+  const diceEl = document.getElementById('dice');
+  if (diceEl) diceEl.classList.add('rolling');
+
+  const roll = Math.floor(Math.random() * 6) + 1;
+  state.lastDice = roll;
+
+  setTimeout(function() { movePlayer(roll); }, 600);
+}
+
+function movePlayer(steps) {
+  const player = state.players[state.turn];
+  let newPos = player.pos + steps;
+  if (newPos >= TOTAL_CELLS) newPos = TOTAL_CELLS - 1;
+  player.pos = newPos;
+
+  const cell = state.rules[newPos];
+  const body = 'Tiraste ' + state.lastDice + '. Caiste en "' + cell.title + '". ' + cell.desc;
+
+  if (cell.effect && newPos !== TOTAL_CELLS - 1) {
+    setMessage(player.name + ' -> casilla ' + newPos, body);
+    render();
+    setTimeout(function() { applyEffect(cell.effect, player); }, 800);
+    return;
+  }
+
+  setMessage(player.name + ' -> casilla ' + newPos, body);
+
+  if (newPos === TOTAL_CELLS - 1) {
+    saveState();
+    render();
+    setTimeout(triggerWin, 1200);
+    return;
+  }
+
+  state.turn = 1 - state.turn;
+  saveState();
+  render();
+}
+
+function applyEffect(effect, player) {
+  const cell = state.rules[player.pos];
+  let extraMsg = '';
+
+  switch (effect) {
+    case 'forward1':
+      player.pos = Math.min(player.pos + 1, TOTAL_CELLS - 1);
+      extraMsg = ' Avanzas 1 mas.';
+      break;
+    case 'forward2':
+      player.pos = Math.min(player.pos + 2, TOTAL_CELLS - 1);
+      extraMsg = ' Avanzas 2 mas.';
+      break;
+    case 'back2':
+      player.pos = Math.max(player.pos - 2, 0);
+      extraMsg = ' Retrocedes 2.';
+      break;
+    case 'skipturn':
+      player.skipNext = true;
+      extraMsg = ' Pierdes el proximo turno.';
+      break;
+    case 'rollagain':
+      extraMsg = ' ¡Tiras de nuevo!';
+      state.rollAgain = true;
+      break;
+    case 'createrule':
+      extraMsg = ' Toca cualquier casilla para reescribirla.';
+      break;
+  }
+
+  setMessage(player.name + ' -> ' + cell.title, cell.desc + extraMsg);
+
+  if (player.pos === TOTAL_CELLS - 1) {
+    saveState();
+    render();
+    setTimeout(triggerWin, 1200);
+    return;
+  }
+
+  if (state.rollAgain) {
+    state.rollAgain = false;
+  } else {
+    state.turn = 1 - state.turn;
+  }
+
+  saveState();
+  render();
+}
+
+function triggerWin() {
+  state.phase = 'won';
+  saveState();
+  render();
+  setTimeout(spawnSparkles, 200);
+}
+
+function spawnSparkles() {
+  const game = document.getElementById('game');
+  if (!game) return;
+  const symbols = ['★', '♥', '◆', '♪', '♫'];
+  const colors = ['#ffd23f', '#ff5cd4', '#5cf2ff', '#5cff7a'];
+  for (let i = 0; i < 20; i++) {
+    setTimeout(function() {
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      s.style.left = Math.random() * 100 + '%';
+      s.style.top = Math.random() * 100 + '%';
+      s.style.color = colors[Math.floor(Math.random() * 4)];
+      game.appendChild(s);
+      setTimeout(function() { s.remove(); }, 1000);
+    }, i * 80);
+  }
+}
+
+function resetGame() {
+  if (!confirm('Reiniciar las posiciones? (Las reglas inventadas se mantienen.)')) return;
+  const savedRules = state.rules;
+  state = defaultState();
+  state.rules = savedRules;
+  state.phase = 'playing';
+  setMessage('SISTEMA', 'Partida reiniciada. ¡Ignacio empieza!');
+  saveState();
+  render();
+}
+
+function backToBoard() {
+  state.phase = 'playing';
+  saveState();
+  render();
+}
+
+// ---------- RULE EDITING ----------
+function openRuleEditor(idx) {
+  if (state.phase !== 'playing') return;
+  state.editingIdx = idx;
+  render();
+}
+
+function saveRuleFromForm() {
+  if (state.editingIdx === null) return;
+  const titleEl = document.getElementById('rule-title-input');
+  const textEl = document.getElementById('rule-text-input');
+  const descEl = document.getElementById('rule-desc-input');
+  if (!titleEl || !textEl || !descEl) return;
+
+  const idx = state.editingIdx;
+  const newTitle = titleEl.value.trim().slice(0, 14) || state.rules[idx].title;
+  const newText = textEl.value.trim().slice(0, 18) || state.rules[idx].text;
+  const newDesc = descEl.value.trim().slice(0, 200) || state.rules[idx].desc;
+
+  state.rules[idx] = Object.assign({}, state.rules[idx], {
+    title: newTitle,
+    text: newText,
+    desc: newDesc,
+    edited: true,
+  });
+  state.editingIdx = null;
+  saveState();
+  render();
+}
+
+function closeEditor() {
+  state.editingIdx = null;
+  render();
+}
+
+function restoreRule() {
+  if (state.editingIdx === null) return;
+  const idx = state.editingIdx;
+  state.rules[idx] = Object.assign({}, DEFAULT_RULES[idx], { edited: false });
+  state.editingIdx = null;
+  saveState();
+  render();
+}
+
+function toggleRulesView() {
+  state.showRules = !state.showRules;
+  saveState();
+  render();
+}
+
+// ---------- RENDER ----------
+function render() {
+  const game = document.getElementById('game');
+  const modalRoot = document.getElementById('modal-root');
+  if (!game || !modalRoot) return;
+
+  if (state.phase === 'splash') {
+    game.innerHTML = renderSplash();
+  } else if (state.phase === 'won') {
+    game.innerHTML = renderWin();
+  } else {
+    game.innerHTML = renderGame();
+  }
+
+  if (state.editingIdx !== null) {
+    modalRoot.innerHTML = renderEditor(state.editingIdx);
+  } else {
+    modalRoot.innerHTML = '';
+  }
+}
+
+function renderSplash() {
+  return '' +
+    '<div class="splash">' +
+      '<div class="splash-title">MICRO<br>UNIVERSO</div>' +
+      '<div class="splash-sub">UN JUEGO PARA<br>' +
+        '<span style="color: var(--yellow)">IGNACIO</span> &amp; <span style="color: var(--magenta)">CHICHA</span>' +
+      '</div>' +
+      '<div class="splash-credit">EL JUEGO DONDE<br>USTEDES PONEN<br>LAS REGLAS</div>' +
+      '<button class="btn primary btn-full" data-action="start">PRESS START</button>' +
+      '<div class="splash-blink">▼ TOCA ARRIBA ▼</div>' +
+    '</div>';
+}
+
+function renderGame() {
+  const p1 = state.players[0];
+  const p2 = state.players[1];
+  const isIgnacio = state.turn === 0;
+
+  let html = '' +
+    '<div class="hud">' +
+      '<div class="hud-player ignacio">' +
+        '<div class="avatar">' + spriteIgnacio(24) + '</div>' +
+        '<div>' +
+          '<div class="name">IGNACIO</div>' +
+          '<div class="hud-pos">' + p1.pos + '/' + (TOTAL_CELLS - 1) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hud-vs">' + (isIgnacio ? '◀' : '▶') + '</div>' +
+      '<div class="hud-player chicha right">' +
+        '<div>' +
+          '<div class="name">CHICHA</div>' +
+          '<div class="hud-pos" style="text-align:right">' + p2.pos + '/' + (TOTAL_CELLS - 1) + '</div>' +
+        '</div>' +
+        '<div class="avatar">' + spriteChicha(24) + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="message">' +
+      '<div class="turn">' + (state.message.turn || (isIgnacio ? 'TURNO DE IGNACIO' : 'TURNO DE CHICHA')) + '</div>' +
+      '<div class="body">' + (state.message.body || 'Tira el dado para jugar.') + '</div>' +
+    '</div>' +
+    '<div class="board-wrapper">' +
+      '<div class="board" id="board">' + renderBoardCells() + '</div>' +
+    '</div>' +
+    '<div class="dice-area">' +
+      '<div class="dice" id="dice">' + (state.lastDice || '?') + '</div>' +
+      '<div class="dice-info">' +
+        (isIgnacio ? 'Le toca a<br><span style="color:var(--yellow)">IGNACIO</span>' : 'Le toca a<br><span style="color:var(--magenta)">CHICHA</span>') +
+      '</div>' +
+    '</div>' +
+    '<div class="controls">' +
+      '<button class="btn primary btn-full" data-action="roll">TIRAR DADO</button>' +
+      '<button class="btn" data-action="toggleRules">' + (state.showRules ? 'OCULTAR REGLAS' : 'VER REGLAS') + '</button>' +
+      '<button class="btn danger" data-action="reset">REINICIAR</button>' +
+    '</div>';
+
+  if (state.showRules) {
+    html += renderRulesList();
+  }
+
+  html += '<div class="footer-credit">MICROUNIVERSO V1.1<br>HECHO CON <span class="heart-mini">♥</span> POR CEV<br>ABRIL 2026 · MARGARITA</div>';
+  return html;
+}
+
+function renderBoardCells() {
+  const grid = [[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null],[null,null,null,null,null,null]];
+  PATH.forEach(function(pos, idx) { grid[pos.row][pos.col] = idx; });
+
+  let html = '';
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 6; col++) {
+      const idx = grid[row][col];
+      if (idx === null) {
+        html += '<div class="cell" style="background:var(--bg-deep);border-color:var(--bg);cursor:default"></div>';
+        continue;
+      }
+      const rule = state.rules[idx];
+      const isCurrent = state.players.some(function(p) { return p.pos === idx; });
+      const tokens = renderTokensInCell(idx);
+      html += '<div class="cell ' + rule.type + (isCurrent ? ' current' : '') + '" data-action="editCell" data-idx="' + idx + '">' +
+        '<div class="cell-num">' + idx + '</div>' +
+        '<div class="cell-icon" style="opacity:' + (tokens ? '0.3' : '1') + '">' + rule.icon + '</div>' +
+        '<div class="cell-text">' + escapeHTML(rule.text) + '</div>' +
+        tokens +
+        (rule.edited ? '<div style="position:absolute;top:2px;right:2px;font-size:5px;color:var(--magenta)">✎</div>' : '') +
+      '</div>';
+    }
+  }
+  return html;
+}
+
+function renderTokensInCell(idx) {
+  let html = '';
+  state.players.forEach(function(p) {
+    if (p.pos === idx) {
+      html += '<div class="token ' + p.sprite + '">' +
+        (p.sprite === 'ignacio' ? spriteIgnacio(40) : spriteChicha(40)) +
+      '</div>';
+    }
+  });
+  return html;
+}
+
+function renderRulesList() {
+  let html = '<div class="rules-list"><h3>▼ REGLAS DE LAS CASILLAS</h3>';
+  state.rules.forEach(function(r, i) {
+    const num = ('0' + i).slice(-2);
+    const colorClass = getColorForType(r.type);
+    html += '<div class="rule-item">' +
+      '<span class="rule-num">[' + num + ']</span> ' +
+      '<strong style="color:var(--' + colorClass + ')">' + escapeHTML(r.title) + '</strong>: ' +
+      escapeHTML(r.desc) +
+      (r.edited ? '<span class="rule-edited"> ✎ EDITADA</span>' : '') +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function getColorForType(type) {
+  const map = { start:'green', end:'magenta', special:'cyan', danger:'red', bonus:'yellow', normal:'white' };
+  return map[type] || 'white';
+}
+
+function renderEditor(idx) {
+  const rule = state.rules[idx];
+  return '' +
+    '<div class="modal-overlay" data-action="overlayClick">' +
+      '<div class="modal">' +
+        '<div class="modal-title">EDITAR CASILLA ' + idx + '</div>' +
+        '<div class="modal-text">Cambia el titulo, subtitulo y descripcion. Tu haces las reglas.</div>' +
+        '<div class="modal-label">TITULO (max 14)</div>' +
+        '<input id="rule-title-input" type="text" value="' + escapeAttr(rule.title) + '" maxlength="14">' +
+        '<div class="modal-label">SUBTITULO (max 18)</div>' +
+        '<input id="rule-text-input" type="text" value="' + escapeAttr(rule.text) + '" maxlength="18">' +
+        '<div class="modal-label">DESCRIPCION</div>' +
+        '<textarea id="rule-desc-input" maxlength="200">' + escapeHTML(rule.desc) + '</textarea>' +
+        '<div class="modal-actions">' +
+          '<button class="btn" data-action="cancelEdit">CANCELAR</button>' +
+          '<button class="btn primary" data-action="saveEdit">GUARDAR</button>' +
+          (rule.edited ? '<button class="btn danger btn-full" data-action="restoreRule">RESTAURAR ORIGINAL</button>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function renderWin() {
+  return '' +
+    '<div class="hud"><div style="grid-column:1/-1;text-align:center;color:var(--yellow);font-size:10px">¡FIN DE LA PARTIDA!</div></div>' +
+    '<div class="win">' +
+      '<div class="win-title">¡VIVAN<br>LOS NOVIOS!</div>' +
+      '<div class="win-couple">' +
+        '<div class="dancer">' + spriteIgnacio(64) + '</div>' +
+        '<span class="heart">♥</span>' +
+        '<div class="dancer">' + spriteChicha(64) + '</div>' +
+      '</div>' +
+      '<div class="win-text">IGNACIO ANDRADE<br>&amp;<br>ISABELLA RAVELO</div>' +
+      '<div class="win-quote">"EN EL JUEGO QUE USTEDES<br>ESTAN POR COMENZAR,<br>NO SOLO ESTA PERMITIDO<br>INVENTAR LAS REGLAS.<br>ESTA ENCOURAGED."</div>' +
+      '<div class="win-cev">- CEV<br>MARGARITA, 2026</div>' +
+      '<div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+        '<button class="btn" data-action="reset">JUGAR DE NUEVO</button>' +
+        '<button class="btn primary" data-action="backToBoard">VOLVER AL TABLERO</button>' +
+      '</div>' +
+    '</div>';
+}
+
+// ---------- HELPERS ----------
+function escapeHTML(str) {
+  if (str === undefined || str === null) return '';
+  return String(str).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+function escapeAttr(str) { return escapeHTML(str); }
+
+// ---------- EVENT DELEGATION ----------
+// IMPORTANTE: Un solo handler en document para TODOS los botones.
+// Esto resuelve el bug donde los botones del modal no funcionaban
+// porque el modal se re-renderiza en cada cambio de estado.
+document.addEventListener('click', function(e) {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action = target.getAttribute('data-action');
+
+  // Para el overlay del modal: solo cerrar si se clickea el fondo, no el contenido
+  if (action === 'overlayClick') {
+    if (e.target === target) closeEditor();
+    return;
+  }
+
+  switch (action) {
+    case 'start': startGame(); break;
+    case 'roll': rollDice(); break;
+    case 'reset': resetGame(); break;
+    case 'backToBoard': backToBoard(); break;
+    case 'toggleRules': toggleRulesView(); break;
+    case 'editCell':
+      const idx = parseInt(target.getAttribute('data-idx'), 10);
+      if (!isNaN(idx)) openRuleEditor(idx);
+      break;
+    case 'saveEdit': saveRuleFromForm(); break;
+    case 'cancelEdit': closeEditor(); break;
+    case 'restoreRule': restoreRule(); break;
+  }
+});
+
+// ---------- INIT ----------
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MICROUNIVERSO · Manual Tecnico</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a23;
+    --bg-deep: #000010;
+    --grid: #1a1a3e;
+    --cyan: #5cf2ff;
+    --magenta: #ff5cd4;
+    --yellow: #ffd23f;
+    --green: #5cff7a;
+    --orange: #ff8c42;
+    --red: #ff3860;
+    --white: #fffef5;
+    --dim: #6a6a9e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1.8;
+    image-rendering: pixelated;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(92, 242, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 92, 212, 0.05) 0%, transparent 50%),
+      var(--bg-deep);
+    background-attachment: fixed;
+    padding: 24px 16px 60px;
+    min-height: 100vh;
+  }
+
+  .crt {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+    opacity: 0.4;
+  }
+
+  .container { max-width: 720px; margin: 0 auto; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 28px 16px;
+    border: 3px solid var(--cyan);
+    background: var(--bg);
+    position: relative;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid var(--magenta);
+    pointer-events: none;
+  }
+
+  .header-eyebrow {
+    color: var(--magenta);
+    font-size: 8px;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+  }
+
+  .header-title {
+    color: var(--cyan);
+    font-size: 22px;
+    text-shadow: 3px 3px 0 var(--magenta);
+    letter-spacing: 2px;
+    line-height: 1.3;
+    margin-bottom: 14px;
+  }
+
+  .header-sub {
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+  }
+
+  .toc {
+    background: var(--bg);
+    border: 2px solid var(--orange);
+    padding: 18px;
+    margin-bottom: 32px;
+  }
+
+  .toc-title {
+    color: var(--orange);
+    font-size: 10px;
+    margin-bottom: 14px;
+  }
+
+  .toc ul { list-style: none; }
+  .toc li {
+    color: var(--white);
+    font-size: 8px;
+    line-height: 2.2;
+    padding-left: 0;
+  }
+  .toc li::before { content: '> '; color: var(--cyan); }
+  .toc a { color: var(--white); text-decoration: none; }
+  .toc a:hover { color: var(--yellow); }
+
+  .section {
+    margin-bottom: 28px;
+    background: var(--bg);
+    border: 2px solid var(--cyan);
+    padding: 20px 18px;
+  }
+
+  .section.warn { border-color: var(--yellow); }
+  .section.danger { border-color: var(--magenta); }
+  .section.bonus { border-color: var(--green); }
+
+  .section-num {
+    display: inline-block;
+    color: var(--bg-deep);
+    background: var(--cyan);
+    font-size: 10px;
+    padding: 4px 10px;
+    margin-bottom: 14px;
+  }
+
+  .section.warn .section-num { background: var(--yellow); }
+  .section.danger .section-num { background: var(--magenta); color: var(--white); }
+  .section.bonus .section-num { background: var(--green); }
+
+  .section-title {
+    color: var(--yellow);
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  p {
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+    margin-bottom: 14px;
+  }
+
+  .highlight { color: var(--cyan); }
+  .highlight-y { color: var(--yellow); }
+  .highlight-m { color: var(--magenta); }
+  .highlight-g { color: var(--green); }
+  .highlight-r { color: var(--red); }
+
+  ol, ul { list-style: none; margin: 14px 0; padding: 0; }
+
+  ol {
+    counter-reset: step;
+  }
+
+  ol > li {
+    counter-increment: step;
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+    padding-left: 36px;
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  ol > li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 2px;
+    color: var(--bg-deep);
+    background: var(--cyan);
+    padding: 2px 6px;
+    font-size: 8px;
+  }
+
+  ul > li {
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  ul > li::before { content: '►'; position: absolute; left: 0; color: var(--cyan); }
+
+  .section.warn ol > li::before { background: var(--yellow); }
+  .section.danger ol > li::before { background: var(--magenta); color: var(--white); }
+  .section.bonus ol > li::before { background: var(--green); }
+
+  .code {
+    background: var(--bg-deep);
+    border: 1px solid var(--dim);
+    padding: 14px;
+    margin: 14px 0;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7.5px;
+    line-height: 1.9;
+    color: var(--green);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code .comment { color: var(--dim); }
+  .code .string { color: var(--yellow); }
+  .code .key { color: var(--cyan); }
+  .code .keyword { color: var(--magenta); }
+  .code .num { color: var(--orange); }
+
+  .inline-code {
+    background: var(--bg-deep);
+    color: var(--green);
+    padding: 2px 6px;
+    border: 1px solid var(--dim);
+    font-size: 8px;
+  }
+
+  .pixel-divider {
+    text-align: center;
+    color: var(--magenta);
+    font-size: 14px;
+    letter-spacing: 12px;
+    margin: 32px 0;
+    opacity: 0.6;
+  }
+
+  .footer {
+    text-align: center;
+    color: var(--dim);
+    font-size: 7px;
+    line-height: 2;
+    padding: 24px 0;
+    margin-top: 40px;
+    border-top: 1px solid var(--grid);
+  }
+
+  .footer .heart { color: var(--red); }
+
+  .alert {
+    background: var(--bg-deep);
+    border: 2px dashed var(--yellow);
+    padding: 14px;
+    margin: 16px 0;
+    font-size: 8px;
+    line-height: 2;
+    color: var(--yellow);
+  }
+
+  .alert.danger {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .alert.success {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .table {
+    width: 100%;
+    margin: 14px 0;
+    border-collapse: collapse;
+    font-size: 8px;
+  }
+
+  .table th, .table td {
+    border: 1px solid var(--dim);
+    padding: 10px 8px;
+    text-align: left;
+    line-height: 1.6;
+  }
+
+  .table th {
+    background: var(--bg-deep);
+    color: var(--cyan);
+    font-size: 8px;
+  }
+
+  .table td {
+    color: var(--white);
+  }
+
+  .table .key-cell { color: var(--yellow); }
+
+  .anchor {
+    scroll-margin-top: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .header-title { font-size: 16px; }
+    .section-title { font-size: 11px; }
+    p, li, .alert { font-size: 8px; }
+    .code { font-size: 7px; }
+    .table { font-size: 7px; }
+    .table th, .table td { padding: 6px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crt"></div>
+
+<div class="container">
+
+  <div class="header">
+    <div class="header-eyebrow">TECHNICAL MANUAL · V1.0</div>
+    <div class="header-title">MICRO<br>UNIVERSO</div>
+    <div class="header-sub">
+      MANUAL DEL <span class="highlight">CODIGO</span><br>
+      PARA CARLOS
+    </div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">▼ INDICE</div>
+    <ul>
+      <li><a href="#s00">00 · QUE ES ESTE ARCHIVO</a></li>
+      <li><a href="#s01">01 · ESTRUCTURA DEL CODIGO</a></li>
+      <li><a href="#s02">02 · COMO PROBAR LOCAL</a></li>
+      <li><a href="#s03">03 · SUBIRLO A GITHUB PAGES</a></li>
+      <li><a href="#s04">04 · EDITAR LAS CASILLAS</a></li>
+      <li><a href="#s05">05 · CAMBIAR COLORES Y TEXTOS</a></li>
+      <li><a href="#s06">06 · LOS SPRITES PIXELADOS</a></li>
+      <li><a href="#s07">07 · TROUBLESHOOTING</a></li>
+    </ul>
+  </div>
+
+  <div class="section anchor" id="s00">
+    <div class="section-num">00</div>
+    <div class="section-title">QUE ES ESTE ARCHIVO</div>
+    <p>
+      <span class="inline-code">index.html</span> es <span class="highlight-y">UN SOLO ARCHIVO</span> que contiene todo el juego: HTML, CSS, JavaScript, sprites pixelados (SVG inline), y datos de las casillas. No depende de ningun servidor ni de ninguna librería externa, salvo la fuente <span class="inline-code">Press Start 2P</span> que se carga desde Google Fonts.
+    </p>
+    <p>
+      Esto significa: <span class="highlight">si tienes el archivo, tienes el juego completo</span>. Lo puedes abrir directamente desde el escritorio haciendo doble click, mandarlo por correo, subirlo a cualquier hosting, o usarlo offline (excepto la fuente, que requiere internet la primera vez).
+    </p>
+    <div class="alert success">
+      ARCHIVO PRINCIPAL: <span class="inline-code">index.html</span><br>
+      TAMAÑO: APROX 35 KB<br>
+      DEPENDENCIAS: NINGUNA (FUENTE OPCIONAL)
+    </div>
+  </div>
+
+  <div class="pixel-divider">★ ◆ ★</div>
+
+  <div class="section warn anchor" id="s01">
+    <div class="section-num">01</div>
+    <div class="section-title">ESTRUCTURA DEL CODIGO</div>
+    <p>
+      Si abres <span class="inline-code">index.html</span> en cualquier editor (VS Code, Sublime, hasta Notepad), vas a ver tres bloques grandes:
+    </p>
+
+    <div class="code"><span class="keyword">&lt;style&gt;</span>
+  <span class="comment">// Todo el CSS del juego.</span>
+  <span class="comment">// Variables de color en :root.</span>
+<span class="keyword">&lt;/style&gt;</span>
+
+<span class="keyword">&lt;body&gt;</span>
+  <span class="comment">// Solo dos divs vacios.</span>
+  <span class="comment">// Todo se renderiza por JS.</span>
+<span class="keyword">&lt;/body&gt;</span>
+
+<span class="keyword">&lt;script&gt;</span>
+  <span class="comment">// La logica del juego.</span>
+  <span class="comment">// Sprites, reglas, estado, render.</span>
+<span class="keyword">&lt;/script&gt;</span></div>
+
+    <p>Las secciones del JavaScript estan marcadas con comentarios. En orden de aparicion:</p>
+
+    <ul>
+      <li><span class="highlight-y">SPRITES</span> · Las funciones <span class="inline-code">spriteIgnacio()</span> y <span class="inline-code">spriteChicha()</span>. Pixel art en SVG.</li>
+      <li><span class="highlight-y">BOARD DESIGN</span> · El path serpenteante 6x4 de 24 casillas.</li>
+      <li><span class="highlight-y">DEFAULT_RULES</span> · El array con las 24 casillas. <span class="highlight-m">Aqui editas el juego.</span></li>
+      <li><span class="highlight-y">GAME STATE</span> · El estado del juego (posiciones, turno, etc.).</li>
+      <li><span class="highlight-y">ACTIONS</span> · Funciones para tirar dado, mover, ganar.</li>
+      <li><span class="highlight-y">RULE EDITING</span> · Editor de casillas en vivo.</li>
+      <li><span class="highlight-y">RENDER</span> · Funciones que pintan la pantalla.</li>
+      <li><span class="highlight-y">EVENT DELEGATION</span> · Un solo handler para todos los clicks.</li>
+    </ul>
+  </div>
+
+  <div class="section bonus anchor" id="s02">
+    <div class="section-num">02</div>
+    <div class="section-title">COMO PROBAR LOCAL</div>
+    <p>La forma mas simple:</p>
+    <ol>
+      <li>Doble click en <span class="inline-code">index.html</span> en el explorador de archivos.</li>
+      <li>Se abre en tu navegador.</li>
+      <li>Listo.</li>
+    </ol>
+    <p>El juego guarda el progreso en el localStorage del navegador, asi que si lo abres por segunda vez en el mismo navegador, recupera el estado.</p>
+    <div class="alert">
+      OJO: Cada navegador tiene su propio localStorage. Si lo abres en Chrome y despues en Safari, son partidas distintas.
+    </div>
+    <p>
+      Si quieres simular como se vería en un celular, abre las DevTools (F12) y activa el modo responsive (Ctrl+Shift+M en Chrome).
+    </p>
+  </div>
+
+  <div class="section danger anchor" id="s03">
+    <div class="section-num">03</div>
+    <div class="section-title">SUBIRLO A GITHUB PAGES</div>
+    <p>Asumiendo que ya conoces GitHub Pages, los pasos son:</p>
+
+    <ol>
+      <li>
+        Crea un repo nuevo en GitHub. Nombre sugerido: <span class="inline-code">microuniverso</span> o similar. Puede ser publico o privado, GitHub Pages funciona en ambos en cuentas Pro.
+      </li>
+      <li>
+        Sube <span class="inline-code">index.html</span> a la <span class="highlight-y">raiz del repo</span> (no en una subcarpeta). Si quieres tambien sube los manuales (<span class="inline-code">manual_jugador.html</span> y <span class="inline-code">manual_tecnico.html</span>).
+      </li>
+      <li>
+        Ve a <span class="highlight">Settings → Pages</span> en el repo.
+      </li>
+      <li>
+        En "Source" elige <span class="highlight-y">Deploy from a branch</span>.
+      </li>
+      <li>
+        Branch: <span class="inline-code">main</span> · Folder: <span class="inline-code">/ (root)</span> · Save.
+      </li>
+      <li>
+        En 1-2 minutos GitHub te da una URL tipo: <span class="inline-code">https://[tu-usuario].github.io/microuniverso/</span>
+      </li>
+      <li>
+        Esa URL es la que les mandas por correo a Ignacio y Chicha.
+      </li>
+    </ol>
+
+    <div class="alert success">
+      TIP: Si quieres una URL mas corta, usa <span class="inline-code">[tu-usuario].github.io</span> como nombre del repo. Eso te da una URL sin subcarpeta.
+    </div>
+
+    <p>
+      <span class="highlight-y">Para editar despues</span>: cualquier cambio que hagas al <span class="inline-code">index.html</span> y subas al repo se va a actualizar automaticamente en la URL en 1-2 minutos. Puedes editar directamente en GitHub usando el lapiz, o clonar el repo y editar local.
+    </p>
+  </div>
+
+  <div class="pixel-divider">★ ◆ ★</div>
+
+  <div class="section warn anchor" id="s04">
+    <div class="section-num">04</div>
+    <div class="section-title">EDITAR LAS CASILLAS</div>
+    <p>
+      Esta es la parte mas importante. Busca en <span class="inline-code">index.html</span> la linea que dice:
+    </p>
+
+    <div class="code"><span class="keyword">const</span> DEFAULT_RULES = [</div>
+
+    <p>(Esta cerca de la linea 460, dentro del bloque <span class="inline-code">&lt;script&gt;</span>.) Despues de eso vienen las 24 casillas, cada una asi:</p>
+
+    <div class="code">{ <span class="key">type</span>: <span class="string">'normal'</span>, <span class="key">icon</span>: <span class="string">'♪'</span>,
+  <span class="key">title</span>: <span class="string">'HNMUN'</span>,
+  <span class="key">text</span>: <span class="string">'Boston 2017'</span>,
+  <span class="key">desc</span>: <span class="string">'Galardones, perdigones,
+        y una cerveza.'</span> },</div>
+
+    <p>
+      Solo cambia el <span class="highlight-y">texto entre comillas</span>. <span class="highlight-r">No cambies el orden ni borres casillas</span> — el tablero espera 24 exactas.
+    </p>
+
+    <p>Los campos:</p>
+
+    <table class="table">
+      <tr>
+        <th>CAMPO</th>
+        <th>QUE ES</th>
+        <th>LIMITE</th>
+      </tr>
+      <tr>
+        <td class="key-cell">type</td>
+        <td>Color de la casilla</td>
+        <td>Ver tabla abajo</td>
+      </tr>
+      <tr>
+        <td class="key-cell">icon</td>
+        <td>Simbolo grande en la casilla</td>
+        <td>1 caracter</td>
+      </tr>
+      <tr>
+        <td class="key-cell">title</td>
+        <td>Nombre de la casilla</td>
+        <td>14 chars</td>
+      </tr>
+      <tr>
+        <td class="key-cell">text</td>
+        <td>Subtitulo bajo el icono</td>
+        <td>18 chars</td>
+      </tr>
+      <tr>
+        <td class="key-cell">desc</td>
+        <td>Descripcion en mensaje</td>
+        <td>200 chars</td>
+      </tr>
+      <tr>
+        <td class="key-cell">effect</td>
+        <td>Que hace la casilla</td>
+        <td>OPCIONAL</td>
+      </tr>
+    </table>
+
+    <p>Tipos disponibles para <span class="inline-code">type</span>:</p>
+
+    <table class="table">
+      <tr>
+        <th>VALOR</th>
+        <th>COLOR</th>
+        <th>USO</th>
+      </tr>
+      <tr><td class="key-cell">'start'</td><td>Verde</td><td>Solo casilla 0</td></tr>
+      <tr><td class="key-cell">'end'</td><td>Magenta</td><td>Solo casilla 23</td></tr>
+      <tr><td class="key-cell">'normal'</td><td>Gris</td><td>Casilla neutral</td></tr>
+      <tr><td class="key-cell">'special'</td><td>Cyan</td><td>Momento clave</td></tr>
+      <tr><td class="key-cell">'bonus'</td><td>Amarillo</td><td>Algo bueno</td></tr>
+      <tr><td class="key-cell">'danger'</td><td>Rojo</td><td>Algo malo</td></tr>
+    </table>
+
+    <p>Efectos disponibles para <span class="inline-code">effect</span>:</p>
+
+    <table class="table">
+      <tr>
+        <th>VALOR</th>
+        <th>QUE HACE</th>
+      </tr>
+      <tr><td class="key-cell">'forward1'</td><td>Avanza 1 casilla extra</td></tr>
+      <tr><td class="key-cell">'forward2'</td><td>Avanza 2 casillas extras</td></tr>
+      <tr><td class="key-cell">'back2'</td><td>Retrocede 2 casillas</td></tr>
+      <tr><td class="key-cell">'skipturn'</td><td>Pierde el proximo turno</td></tr>
+      <tr><td class="key-cell">'rollagain'</td><td>Tira el dado de nuevo</td></tr>
+      <tr><td class="key-cell">'createrule'</td><td>Mensaje invitando a editar</td></tr>
+    </table>
+
+    <p>Iconos buenos para usar (compatibles con cualquier sistema):</p>
+
+    <div class="code">★ ☆ ♥ ♦ ♣ ♠ ♪ ♫ ◆ ◇ ▲ ▼ ● ○ ! ? + - = * / \ | ~ #</div>
+
+    <div class="alert">
+      Si pones un icono que el sistema no tiene, va a salir un cuadradito vacio. Pega y prueba uno por uno.
+    </div>
+  </div>
+
+  <div class="section anchor" id="s05">
+    <div class="section-num">05</div>
+    <div class="section-title">CAMBIAR COLORES Y TEXTOS</div>
+
+    <p>
+      <span class="highlight-y">Para cambiar la paleta de colores</span>, busca el bloque <span class="inline-code">:root</span> al inicio del CSS:
+    </p>
+
+    <div class="code"><span class="key">:root</span> {
+  <span class="key">--bg</span>: <span class="string">#0a0a23</span>;       <span class="comment">// Fondo</span>
+  <span class="key">--bg-deep</span>: <span class="string">#000010</span>;  <span class="comment">// Fondo mas oscuro</span>
+  <span class="key">--cyan</span>: <span class="string">#5cf2ff</span>;     <span class="comment">// Casillas especiales</span>
+  <span class="key">--magenta</span>: <span class="string">#ff5cd4</span>;  <span class="comment">// Chicha / meta</span>
+  <span class="key">--yellow</span>: <span class="string">#ffd23f</span>;   <span class="comment">// Ignacio / bonus</span>
+  <span class="key">--green</span>: <span class="string">#5cff7a</span>;    <span class="comment">// Inicio</span>
+  <span class="key">--red</span>: <span class="string">#ff3860</span>;      <span class="comment">// Casillas peligro</span>
+}</div>
+
+    <p>
+      Cualquier color que cambies aqui se aplica a todo el juego. Usa codigos hexadecimales, formato <span class="inline-code">#rrggbb</span>.
+    </p>
+
+    <p>
+      <span class="highlight-y">Para cambiar la frase final del discurso</span> en la pantalla de victoria, busca:
+    </p>
+
+    <div class="code"><span class="comment">// Dentro de renderWin()</span>
+<span class="string">'"EN EL JUEGO QUE USTEDES<br>
+ESTAN POR COMENZAR,<br>
+NO SOLO ESTA PERMITIDO<br>
+INVENTAR LAS REGLAS.<br>
+ESTA ENCOURAGED."'</span></div>
+
+    <p>
+      Cambia el texto entre comillas. Usa <span class="inline-code">&lt;br&gt;</span> para saltos de linea.
+    </p>
+  </div>
+
+  <div class="section bonus anchor" id="s06">
+    <div class="section-num">06</div>
+    <div class="section-title">LOS SPRITES PIXELADOS</div>
+
+    <p>
+      Los muñequitos de Ignacio y Chicha son SVG inline dentro de las funciones <span class="inline-code">spriteIgnacio()</span> y <span class="inline-code">spriteChicha()</span>. Estan dibujados pixel por pixel en una grilla 16x16.
+    </p>
+
+    <p>Cada linea es un pixel rectangular:</p>
+
+    <div class="code"><span class="keyword">&lt;rect</span> <span class="key">x=</span><span class="string">"5"</span> <span class="key">y=</span><span class="string">"6"</span>
+      <span class="key">width=</span><span class="string">"1"</span> <span class="key">height=</span><span class="string">"1"</span>
+      <span class="key">fill=</span><span class="string">"#1a1a1a"</span><span class="keyword">/&gt;</span></div>
+
+    <p>
+      <span class="key">x</span> y <span class="key">y</span> son la posicion (0-15), <span class="key">width</span> y <span class="key">height</span> son cuantos pixeles ocupa, <span class="key">fill</span> es el color.
+    </p>
+
+    <p>
+      Si quieres modificar los sprites: cambia los <span class="key">fill</span> para cambiar colores, o agrega mas <span class="inline-code">&lt;rect&gt;</span> para añadir detalles. <span class="highlight-r">No es facil sin una herramienta visual.</span>
+    </p>
+
+    <div class="alert">
+      RECOMENDACION: Usa Piskelapp.com (gratis, en linea) para dibujar pixel art en 16x16, exporta como SVG, y reemplaza el contenido de la funcion. Tarda 10 minutos.
+    </div>
+  </div>
+
+  <div class="pixel-divider">★ ◆ ★</div>
+
+  <div class="section danger anchor" id="s07">
+    <div class="section-num">07</div>
+    <div class="section-title">TROUBLESHOOTING</div>
+
+    <p><span class="highlight-y">"El juego no carga"</span></p>
+    <ul>
+      <li>Abre la consola del navegador (F12 → Console). Si hay errores rojos, mandame el screenshot.</li>
+      <li>Verifica que GitHub Pages haya terminado de hacer deploy (Settings → Pages, abajo dice "Your site is live at...").</li>
+    </ul>
+
+    <p><span class="highlight-y">"Los textos quedaron pegados a otros"</span></p>
+    <ul>
+      <li>Probablemente excediste los limites de caracteres. Cuenta: title 14, text 18, desc 200.</li>
+    </ul>
+
+    <p><span class="highlight-y">"Quiero borrar todo el progreso guardado"</span></p>
+    <ul>
+      <li>Abre el navegador donde se jugo. F12 → Application → Local Storage → encuentra la URL → borra la entrada <span class="inline-code">microuniverso_v2</span>.</li>
+      <li>Tambien puedes pedirles a ellos que abran en modo incognito.</li>
+    </ul>
+
+    <p><span class="highlight-y">"Quiero cambiar el numero total de casillas"</span></p>
+    <ul>
+      <li>No es trivial. El path serpenteante esta calculado para 24 casillas (6x4). Si las cambias, tambien tienes que ajustar la funcion <span class="inline-code">buildPath()</span> y la constante <span class="inline-code">TOTAL_CELLS</span>.</li>
+      <li>Mas facil: deja 24, pero cambia los textos para reusar las que no necesites.</li>
+    </ul>
+
+    <p><span class="highlight-y">"Los acentos se ven raros"</span></p>
+    <ul>
+      <li>Asegurate de que el archivo este guardado en UTF-8. La mayoria de editores ya lo hacen por defecto.</li>
+      <li>Si igual hay problemas, evita acentos en los textos. Yo puse las casillas sin acentos a proposito por compatibilidad con la fuente Press Start 2P.</li>
+    </ul>
+  </div>
+
+  <div class="section warn">
+    <div class="section-num">★</div>
+    <div class="section-title">CHECKLIST FINAL</div>
+    <ul>
+      <li>Edita las casillas que quieras en <span class="inline-code">DEFAULT_RULES</span>.</li>
+      <li>Abre <span class="inline-code">index.html</span> local, juega una partida completa, verifica que todo se vea bien.</li>
+      <li>Sube a GitHub Pages siguiendo la seccion 03.</li>
+      <li>Abre la URL desde tu celular para confirmar que se ve bien en mobile.</li>
+      <li>Manda la URL por correo a los novios.</li>
+      <li>El dia de la boda, durante el discurso, di "en sus telefonos van a encontrar...".</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    MICROUNIVERSO V1.0 · MANUAL TECNICO<br>
+    HECHO PARA <span class="highlight-y">CARLOS EDUARDO VARGAS</span><br>
+    PARA EL REGALO DE BODA DE <span class="highlight-y">IGNACIO</span> &amp; <span class="highlight-m">ISABELLA</span><br>
+    <span class="heart">♥</span>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MICROUNIVERSO · Manual del Jugador</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a23;
+    --bg-deep: #000010;
+    --grid: #1a1a3e;
+    --cyan: #5cf2ff;
+    --magenta: #ff5cd4;
+    --yellow: #ffd23f;
+    --green: #5cff7a;
+    --orange: #ff8c42;
+    --red: #ff3860;
+    --white: #fffef5;
+    --dim: #6a6a9e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1.8;
+    image-rendering: pixelated;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 20% 30%, rgba(92, 242, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 92, 212, 0.05) 0%, transparent 50%),
+      var(--bg-deep);
+    background-attachment: fixed;
+    padding: 24px 16px 60px;
+    min-height: 100vh;
+  }
+
+  .crt {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+    opacity: 0.4;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 28px 16px;
+    border: 3px solid var(--magenta);
+    background: var(--bg);
+    position: relative;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid var(--cyan);
+    pointer-events: none;
+  }
+
+  .header-eyebrow {
+    color: var(--cyan);
+    font-size: 8px;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+  }
+
+  .header-title {
+    color: var(--yellow);
+    font-size: 22px;
+    text-shadow: 3px 3px 0 var(--magenta);
+    letter-spacing: 2px;
+    line-height: 1.3;
+    margin-bottom: 14px;
+  }
+
+  .header-sub {
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+  }
+
+  .section {
+    margin-bottom: 28px;
+    background: var(--bg);
+    border: 2px solid var(--cyan);
+    padding: 20px 18px;
+  }
+
+  .section.warn { border-color: var(--yellow); }
+  .section.danger { border-color: var(--magenta); }
+  .section.bonus { border-color: var(--green); }
+
+  .section-num {
+    display: inline-block;
+    color: var(--bg-deep);
+    background: var(--cyan);
+    font-size: 10px;
+    padding: 4px 10px;
+    margin-bottom: 14px;
+  }
+
+  .section.warn .section-num { background: var(--yellow); }
+  .section.danger .section-num { background: var(--magenta); color: var(--white); }
+  .section.bonus .section-num { background: var(--green); }
+
+  .section-title {
+    color: var(--yellow);
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .section.warn .section-title { color: var(--yellow); }
+  .section.danger .section-title { color: var(--magenta); }
+  .section.bonus .section-title { color: var(--green); }
+
+  p {
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+    margin-bottom: 14px;
+  }
+
+  .highlight { color: var(--cyan); }
+  .highlight-y { color: var(--yellow); }
+  .highlight-m { color: var(--magenta); }
+  .highlight-g { color: var(--green); }
+  .highlight-r { color: var(--red); }
+
+  ul, ol {
+    list-style: none;
+    margin: 14px 0;
+    padding: 0;
+  }
+
+  li {
+    color: var(--white);
+    font-size: 9px;
+    line-height: 2;
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  li::before {
+    content: '►';
+    position: absolute;
+    left: 0;
+    color: var(--cyan);
+  }
+
+  .section.warn li::before { color: var(--yellow); }
+  .section.danger li::before { color: var(--magenta); }
+  .section.bonus li::before { color: var(--green); }
+
+  .legend {
+    background: var(--bg-deep);
+    padding: 14px;
+    margin: 16px 0;
+    border: 1px dashed var(--dim);
+  }
+
+  .legend-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 8px;
+    line-height: 1.6;
+  }
+
+  .legend-row:last-child { margin-bottom: 0; }
+
+  .swatch {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 2px solid;
+  }
+
+  .swatch.s-start { background: #1a4a3e; border-color: var(--green); color: var(--green); }
+  .swatch.s-end { background: #4a1a3e; border-color: var(--magenta); color: var(--magenta); }
+  .swatch.s-special { background: #2a1a4e; border-color: var(--cyan); color: var(--cyan); }
+  .swatch.s-danger { background: #4a1a1a; border-color: var(--red); color: var(--red); }
+  .swatch.s-bonus { background: #4a3a1a; border-color: var(--yellow); color: var(--yellow); }
+  .swatch.s-normal { background: var(--grid); border-color: #2a2a5e; color: var(--white); }
+
+  .pixel-divider {
+    text-align: center;
+    color: var(--magenta);
+    font-size: 14px;
+    letter-spacing: 12px;
+    margin: 32px 0;
+    opacity: 0.6;
+  }
+
+  .footer {
+    text-align: center;
+    color: var(--dim);
+    font-size: 7px;
+    line-height: 2;
+    padding: 24px 0;
+    margin-top: 40px;
+    border-top: 1px solid var(--grid);
+  }
+
+  .footer .heart { color: var(--red); }
+
+  .quote {
+    border-left: 4px solid var(--magenta);
+    padding-left: 16px;
+    margin: 16px 0;
+    font-size: 9px;
+    color: var(--magenta);
+    line-height: 2;
+  }
+
+  .button-demo {
+    display: inline-block;
+    background: var(--bg);
+    color: var(--yellow);
+    border: 2px solid var(--yellow);
+    padding: 8px 14px;
+    font-size: 8px;
+    margin: 0 4px;
+  }
+
+  .button-demo.cyan { color: var(--cyan); border-color: var(--cyan); }
+  .button-demo.magenta { color: var(--magenta); border-color: var(--magenta); }
+
+  @media (max-width: 480px) {
+    .header-title { font-size: 16px; }
+    .section-title { font-size: 11px; }
+    p, li, .legend-row { font-size: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crt"></div>
+
+<div class="container">
+
+  <div class="header">
+    <div class="header-eyebrow">PLAYER MANUAL · V1.0</div>
+    <div class="header-title">MICRO<br>UNIVERSO</div>
+    <div class="header-sub">
+      EL JUEGO DONDE<br>
+      <span class="highlight-y">USTEDES</span> PONEN LAS REGLAS
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-num">00</div>
+    <div class="section-title">¿QUE ES ESTO?</div>
+    <p>
+      Esto es un regalo de <span class="highlight-y">Carlos</span>. Un juego de tablero pixelado, hecho a mano, para que jueguen <span class="highlight-y">Ignacio</span> y <span class="highlight-m">Chicha</span>.
+    </p>
+    <p>
+      Cada casilla del tablero cuenta un pedazo de la historia de ustedes. Algunas son tonterias compartidas. Otras son momentos importantes. <span class="highlight">Todas son suyas.</span>
+    </p>
+    <div class="quote">
+      "EN EL JUEGO QUE USTEDES ESTAN POR COMENZAR, NO SOLO ESTA PERMITIDO INVENTAR LAS REGLAS. ESTA ENCOURAGED."
+    </div>
+  </div>
+
+  <div class="pixel-divider">★ ◆ ★</div>
+
+  <div class="section">
+    <div class="section-num">01</div>
+    <div class="section-title">COMO EMPEZAR</div>
+    <p>
+      Abran el link en el celular. La pantalla de inicio dice <span class="highlight-y">MICROUNIVERSO</span>. Toquen el boton <span class="button-demo">PRESS START</span> y arranca la partida.
+    </p>
+    <p>
+      <span class="highlight-y">Ignacio</span> empieza siempre. <span class="highlight-m">Chicha</span> juega en segundo turno. Pueden compartir el celular, o pasarselo cuando le toque al otro.
+    </p>
+  </div>
+
+  <div class="section bonus">
+    <div class="section-num">02</div>
+    <div class="section-title">COMO SE JUEGA</div>
+    <p>
+      Es un juego de tablero clasico, con un giro:
+    </p>
+    <ul>
+      <li>Tocan <span class="button-demo">TIRAR DADO</span>. El dado da un numero del 1 al 6.</li>
+      <li>Su muñequito (sprite pixelado) avanza esa cantidad de casillas.</li>
+      <li>Cada casilla en la que cae les muestra un mensaje en la parte de arriba.</li>
+      <li>Algunas casillas tienen <span class="highlight-y">efectos especiales</span> que cambian el juego.</li>
+      <li>Gana quien llegue primero a la casilla 23 (la del corazon).</li>
+    </ul>
+    <p>
+      Pero ojo: <span class="highlight">ganar no es lo importante</span>. Lo importante es jugar, leer las casillas, y reirse de las jodas que estan ahi.
+    </p>
+  </div>
+
+  <div class="section">
+    <div class="section-num">03</div>
+    <div class="section-title">TIPOS DE CASILLAS</div>
+    <p>Cada casilla tiene un color que indica que tipo es:</p>
+
+    <div class="legend">
+      <div class="legend-row">
+        <div class="swatch s-start">★</div>
+        <div><span class="highlight-g">VERDE</span> · La casilla de inicio. Aqui empiezan los dos.</div>
+      </div>
+      <div class="legend-row">
+        <div class="swatch s-normal">♪</div>
+        <div><span class="highlight">NEUTRAL</span> · Una historia para leer. No pasa nada especial.</div>
+      </div>
+      <div class="legend-row">
+        <div class="swatch s-bonus">◆</div>
+        <div><span class="highlight-y">AMARILLA</span> · Casilla de bonus. Algo bueno te pasa.</div>
+      </div>
+      <div class="legend-row">
+        <div class="swatch s-special">♦</div>
+        <div><span class="highlight">CYAN</span> · Casilla especial. Momento clave de la historia.</div>
+      </div>
+      <div class="legend-row">
+        <div class="swatch s-danger">!</div>
+        <div><span class="highlight-r">ROJA</span> · Casilla peligrosa. Algo no tan bueno te pasa.</div>
+      </div>
+      <div class="legend-row">
+        <div class="swatch s-end">♥</div>
+        <div><span class="highlight-m">MAGENTA</span> · La meta. Aqui ganan ustedes dos.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section warn">
+    <div class="section-num">04</div>
+    <div class="section-title">EFECTOS ESPECIALES</div>
+    <p>Algunas casillas hacen cosas. Si caen en una con efecto, va a pasar automaticamente:</p>
+    <ul>
+      <li><span class="highlight-y">AVANZA 1 / AVANZA 2</span> · Tu ficha avanza extra. Suerte.</li>
+      <li><span class="highlight-r">RETROCEDE 2</span> · Tu ficha retrocede. Mala suerte.</li>
+      <li><span class="highlight-r">PIERDES TURNO</span> · El otro juega dos veces seguidas.</li>
+      <li><span class="highlight-y">TIRA DE NUEVO</span> · Vuelves a tirar el dado.</li>
+      <li><span class="highlight">CREA UNA REGLA</span> · Te invita a inventar tu propia casilla. (Ver seccion 06.)</li>
+    </ul>
+  </div>
+
+  <div class="section danger">
+    <div class="section-num">05</div>
+    <div class="section-title">EL BOTON SECRETO</div>
+    <p>
+      Esto es lo mas importante del juego. <span class="highlight-y">Toquen cualquier casilla del tablero</span> para abrirla.
+    </p>
+    <p>
+      Cuando la abren, pueden <span class="highlight-m">cambiar el titulo, el subtitulo y la descripcion</span>. Pueden poner lo que quieran. Una joda interna. Un recuerdo. Un insulto carinoso. Una promesa.
+    </p>
+    <p>
+      Las casillas que han editado quedan marcadas con un <span class="highlight-m">✎</span> en la esquina. Si se arrepienten, dentro del editor hay un boton <span class="button-demo magenta">RESTAURAR ORIGINAL</span> que la devuelve a como estaba.
+    </p>
+    <p>
+      <span class="highlight-y">Sus reglas se guardan automaticamente</span> en el celular. Pueden cerrar el juego, abrirlo otro dia, y todo va a estar como lo dejaron.
+    </p>
+  </div>
+
+  <div class="section bonus">
+    <div class="section-num">06</div>
+    <div class="section-title">CONSEJOS DE JUEGO</div>
+    <ul>
+      <li>No jueguen rapido. Lean cada casilla. Riansen.</li>
+      <li>Cuando caigan en una casilla que les recuerde algo, pongan pausa y cuentense la historia.</li>
+      <li>Editen casillas. Hablen entre ustedes sobre que poner. Discutan. Eso es jugar.</li>
+      <li>Hagan trampa. Si quieren mover dos casillas mas porque "se sintio bien", muevanlas. Carlos no esta viendo.</li>
+      <li>Si ganan los dos al mismo tiempo, eso es lo correcto.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-num">07</div>
+    <div class="section-title">BOTONES DEL JUEGO</div>
+    <ul>
+      <li><span class="button-demo">TIRAR DADO</span> Tira el dado y mueve tu ficha.</li>
+      <li><span class="button-demo cyan">VER REGLAS</span> Muestra una lista con todas las casillas y sus descripciones.</li>
+      <li><span class="button-demo magenta">REINICIAR</span> Reinicia las posiciones, pero <span class="highlight-y">mantiene las reglas que ustedes inventaron</span>.</li>
+    </ul>
+  </div>
+
+  <div class="pixel-divider">★ ◆ ★</div>
+
+  <div class="section danger">
+    <div class="section-num">08</div>
+    <div class="section-title">UNA NOTA DE CARLOS</div>
+    <p>
+      Este juego no es para ganarlo una vez. Es para que lo jueguen muchas veces, en distintos momentos, y que cada vez que lo abran sea un poquito diferente, porque ustedes lo cambiaron.
+    </p>
+    <p>
+      Como su matrimonio.
+    </p>
+    <p>
+      <span class="highlight-y">Los quiero. Salud.</span>
+    </p>
+  </div>
+
+  <div class="footer">
+    MICROUNIVERSO V1.0<br>
+    UN REGALO DE CARLOS EDUARDO VARGAS<br>
+    PARA <span class="highlight-y">IGNACIO</span> &amp; <span class="highlight-m">ISABELLA</span><br>
+    HECHO CON <span class="heart">♥</span> · MARGARITA · 2026
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -468,22 +468,17 @@ function applyEffect(effect, player) {
   switch (effect) {
     case 'forward1':
       player.pos = Math.min(player.pos + 1, TOTAL_CELLS - 1);
-      extraMsg = ' Avanzas 1 mas.';
       break;
     case 'forward2':
       player.pos = Math.min(player.pos + 2, TOTAL_CELLS - 1);
-      extraMsg = ' Avanzas 2 mas.';
       break;
     case 'back2':
       player.pos = Math.max(player.pos - 2, 0);
-      extraMsg = ' Retrocedes 2.';
       break;
     case 'skipturn':
       player.skipNext = true;
-      extraMsg = ' Pierdes el proximo turno.';
       break;
     case 'rollagain':
-      extraMsg = ' ¡Tiras de nuevo!';
       state.rollAgain = true;
       break;
     case 'createrule':
